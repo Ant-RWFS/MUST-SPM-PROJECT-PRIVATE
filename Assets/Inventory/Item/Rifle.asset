@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d4fdb2eb5d715d4296872eac143b900, type: 3}
+  m_Name: Rifle
+  m_EditorClassIdentifier: 
+  itemName: Rifle
+  itemImage: {fileID: 21300000, guid: 202fd8f35f6dbea44acfbee128bfcad2, type: 3}
+  maxStackSize: 1
+  amount: 1
+  itemType: 0
+  itemInfo: rifle
+  ac: {fileID: 9100000, guid: 2814f8319b973a6489d7da76b7bdc8d0, type: 2}
+  firingRatePerSec: 8
+  bullet: {fileID: 7720518415878414325, guid: 43e6006cf9eda2b418b47419aa91f9af, type: 3}
+  isEquipped: 1

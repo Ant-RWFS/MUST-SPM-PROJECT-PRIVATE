@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e184ee3a726aa504db22b59b9def1e02, type: 3}
+  m_Name: New Wood
+  m_EditorClassIdentifier: 
+  itemName: Stone
+  itemImage: {fileID: -599354732, guid: 45042944beeb2d34e8121b7d2a1b3464, type: 3}
+  maxStackSize: 99
+  amount: 4
+  itemType: 1
+  itemInfo: to build
