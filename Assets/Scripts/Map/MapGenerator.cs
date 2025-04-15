@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 public struct TileData
 {
@@ -13,6 +14,17 @@ public struct TileData
     public int resourceType;
     public int resourceInitID;
     public bool resourceInstantiatable;
+}
+
+[System.Serializable]
+public struct Area
+{
+    [Range(0, 1f)]
+    public float ratio;
+    [Range(0, 1f)]
+    public float density;
+    [Range(0, 1f)]
+    public float lacunarity;
 }
 
 public class MapGenerator : MonoBehaviour
@@ -28,18 +40,11 @@ public class MapGenerator : MonoBehaviour
     public TileBase waterTile;
 
     public int radius;
-
     public int seed;
     public bool randomSeed;
 
-    [Range(0, 1f)]
-    public float lacunarity;
-
-    [Range(0, 1f)]
-    public float waterRatio;
-
-    [Range(0, 1f)]
-    public float resourceDensity;
+    public Area map;
+    public Area item;
 
     [Header("Detector")]
     [SerializeField] private Transform mapDetector;
@@ -70,13 +75,15 @@ public class MapGenerator : MonoBehaviour
     {
         UpdateMap();
     }
-
+  
     #region Initialization
     private void InitMap()
     {
         InitPlayerTransform();
         InitMapData();
         UpdateTilemapData();
+        itemGenerator.CleanSpanwedObjects();
+        UpdateTilemapData();//Reupdate the mapdata to ensure the instantiation of objects
     }
 
     private void InitPlayerTransform() => playerTransform = PlayerManager.instance.playerTransform;
@@ -111,7 +118,7 @@ public class MapGenerator : MonoBehaviour
 
         if (!isPlayerDetected)
         {
-            itemGenerator.CleanSpanwedItems();
+            itemGenerator.CleanSpanwedObjects();
             UpdateTilemapData();
 
             mapDetector.position = new Vector3Int((int)playerTransform.position.x, (int)playerTransform.position.y);
@@ -152,38 +159,52 @@ public class MapGenerator : MonoBehaviour
             {
                 if ((x * x + y * y) <= (radius * radius))
                 {
-                    int resourceType, resourceInitID;
-                    bool tileType, resourceInstantiated;
-                    float offsetX, offsetY, mapNoiseValue, resourceNoise, resourceTypeNoise;
+                    int objectType, objectInitID;
+                    bool tileType, objectInstantiated;
+                    float offsetX, offsetY, mapNoise, itemNoise, objectTypeNoise;
 
-                    mapNoiseValue = Mathf.PerlinNoise((playerX + x) * lacunarity + randomOffset, (playerY + y) * lacunarity + randomOffset);
-                    tileType = mapNoiseValue < waterRatio;
+                    mapNoise = Mathf.PerlinNoise((playerX + x) * map.lacunarity + randomOffset, (playerY + y) * map.lacunarity + randomOffset);
+                    tileType = mapNoise < map.ratio;
 
-                    resourceNoise = Mathf.PerlinNoise((playerX + x) * lacunarity + randomOffset + 10000, (playerY + y) * lacunarity + randomOffset + 10000);
+                    itemNoise = Mathf.PerlinNoise((playerX + x) * item.lacunarity + randomOffset + 10000, (playerY + y) * item.lacunarity + randomOffset + 10000);
+              
 
-                    if (!tileType && resourceNoise < resourceDensity)
+                    if (!tileType && itemNoise < map.density)
                     {
-                        resourceTypeNoise = Mathf.PerlinNoise((playerX + x) * lacunarity + randomOffset + 20000, (playerY + y) * lacunarity + randomOffset + 20000);
-
                         offsetX = HashToOffset(playerX + x, playerY + y, seed, 0.4f);
                         offsetY = HashToOffset(playerX + x, playerY + y, seed, 0.4f);
 
-                        if (resourceTypeNoise < 0.5f)
-                            resourceType = 0;
-                        else
-                            resourceType = 1;
+                        objectTypeNoise = Mathf.PerlinNoise((playerX + x) * map.lacunarity + randomOffset + 20000, (playerY + y) * map.lacunarity + randomOffset + 20000);
 
-                        resourceInitID = Mathf.Abs((int)(MurmurHash(playerX + x, playerY + y, seed + resourceType) % itemGenerator.items[resourceType].maxStage));
-                        resourceInstantiated = IsItemInstantiated(playerX + x, playerY + y);
-                        itemGenerator.UpdateSpawnedItems(resourceType, playerX + x, playerY + y, offsetX, offsetY);
+                        if (objectTypeNoise < 0.5f)
+                            objectType = 0;
+                        else
+                            objectType = 1;
+
+                        objectInitID = Mathf.Abs((int)(MurmurHash(playerX + x, playerY + y, seed + objectType) % itemGenerator.resources[objectType].maxStage));
+                        objectInstantiated = IsObjectInstantiated(playerX + x, playerY + y);
+
+                        itemGenerator.UpdateSpawnedResources(objectType, playerX + x, playerY + y, offsetX, offsetY);
                     }
+
+                    else if (!tileType && mapNoise < item.ratio && itemNoise > 1 - item.density)
+                    {
+                        offsetX = HashToOffset(playerX + x, playerY + y, seed, 0.6f);
+                        offsetY = HashToOffset(playerX + x, playerY + y, seed, 0.6f);
+                        objectTypeNoise = Mathf.PerlinNoise((playerX + x) * item.lacunarity + randomOffset + 20000, (playerY + y) * item.lacunarity + randomOffset + 20000);
+                        objectType = -1;
+                        objectInitID = Mathf.Abs((int)(MurmurHash(playerX + x, playerY + y, seed) % itemGenerator.items.Count));
+                        objectInstantiated = IsObjectInstantiated(playerX + x, playerY + y);
+                        itemGenerator.UpdateSpawnedItems(objectInitID, playerX + x, playerY + y, offsetX, offsetY);
+                    }
+
                     else
                     {
                         offsetX = 0;
                         offsetY = 0;
-                        resourceType = -1;
-                        resourceInitID = 0;
-                        resourceInstantiated = false;
+                        objectType = -1;
+                        objectInitID = 0;
+                        objectInstantiated = false;
                     }
 
                     var tileData = new TileData
@@ -193,9 +214,9 @@ public class MapGenerator : MonoBehaviour
                         offsetX = offsetX,
                         offsetY = offsetY,
                         tileType = tileType,
-                        resourceType = resourceType,
-                        resourceInstantiatable = resourceInstantiated,
-                        resourceInitID = resourceInitID
+                        resourceType = objectType,
+                        resourceInstantiatable = objectInstantiated,
+                        resourceInitID = objectInitID
                     };
 
                     updatedMapData[(tileData.x, tileData.y)] = tileData;
@@ -229,16 +250,31 @@ public class MapGenerator : MonoBehaviour
         {
             var tileData = kvp.Value;
 
-            if (tileData.resourceType != -1 && tileData.resourceInstantiatable)
+            if (tileData.resourceInstantiatable)
             {
-                GameObject item = itemGenerator.InstantiateSpanwedItems(tileData.x, tileData.y, tileData.offsetX, tileData.offsetY);
-
-                if (item)
+                if (tileData.resourceType != -1)
                 {
-                    Resource resource = item.GetComponentInChildren<Resource>();
-                    resource.initStage = tileData.resourceInitID;
-                    resource.x = tileData.x;
-                    resource.y = tileData.y;
+                    GameObject spawnedResource = itemGenerator.InstantiateSpanwedResources(tileData.x, tileData.y, tileData.offsetX, tileData.offsetY);
+
+                    if (spawnedResource)
+                    {
+                        Resource resource = spawnedResource.GetComponentInChildren<Resource>();
+                        resource.initStage = tileData.resourceInitID;
+                        resource.x = tileData.x;
+                        resource.y = tileData.y;
+                    }
+                }
+                else
+                {
+                    GameObject spawnedItem = itemGenerator.InstantiateSpanwedItems(tileData.x, tileData.y, tileData.offsetX, tileData.offsetY);
+
+                    if (spawnedItem)
+                    {
+                        MapItem item =spawnedItem.GetComponentInChildren<MapItem>();
+                        item.initStage = 1;
+                        item.x = tileData.x;
+                        item.y = tileData.y;
+                    }
                 }
             }
 
@@ -255,16 +291,16 @@ public class MapGenerator : MonoBehaviour
         mapData = updatedMapData;
     }
 
-    private bool IsItemInstantiated(int _x, int _y) => !mapData.ContainsKey((_x, _y));
-    public void ItemAdjust(int _x, int _y) 
+    private bool IsObjectInstantiated(int _x, int _y) => !mapData.ContainsKey((_x, _y));
+    public void ItemAdjust(int _x, int _y)
     {
         if (mapData.ContainsKey((_x, _y)))
-        { 
+        {
             TileData tileData = mapData[((_x, _y))];
             tileData.resourceType = -1;
         }
     }
-    public void ItemRegenerate(int _x, int _y) 
+    public void ItemRegenerate(int _x, int _y)
     {
         if (mapData.ContainsKey((_x, _y)))
             mapData.Remove((_x, _y));
