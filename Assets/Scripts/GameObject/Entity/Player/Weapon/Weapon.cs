@@ -3,14 +3,16 @@ using UnityEngine;
 public class Weapon : MonoBehaviour
 {
     [SerializeField] private Bag bag;
-
+    public Inventory inventory;
+    public InventoryManager instance;
     private SpriteRenderer sr;
     private Animator anim;
 
     private Vector2 gunVector;
-    private Vector2 bulletVector;
 
     private float attackTimer;
+    
+    
     private void Awake()
     {
         sr = GetComponentInChildren<SpriteRenderer>();
@@ -41,20 +43,12 @@ public class Weapon : MonoBehaviour
 
     private void FollowAimPoint()
     {
-        gunVector = new Vector2(
-            Input.mousePosition.x - Screen.width / 2, 
-            Input.mousePosition.y - Screen.height / 2
-        ).normalized;
-
-        bulletVector = new Vector2(
-            gunVector.x * Mathf.Cos(CameraManager.instance.cameraAngle * Mathf.Deg2Rad) - gunVector.y * Mathf.Sin(CameraManager.instance.cameraAngle * Mathf.Deg2Rad),
-            gunVector.x * Mathf.Sin(CameraManager.instance.cameraAngle * Mathf.Deg2Rad) + gunVector.y * Mathf.Cos(CameraManager.instance.cameraAngle * Mathf.Deg2Rad)
-        ).normalized;
+        gunVector = new Vector2(Input.mousePosition.x - Screen.width / 2, Input.mousePosition.y - Screen.height / 2).normalized;
 
         if (gunVector.magnitude > 0)
         {
             float targetAngle = Mathf.Atan2(gunVector.y, gunVector.x) * Mathf.Rad2Deg;
-            float currentAngle = Mathf.MoveTowardsAngle(sr.transform.eulerAngles.z, targetAngle + CameraManager.instance.cameraAngle, 500 * Time.deltaTime);
+            float currentAngle = Mathf.MoveTowardsAngle(sr.transform.eulerAngles.z, targetAngle + Camera.main.transform.parent.transform.eulerAngles.z, 500 * Time.deltaTime);
 
             sr.transform.eulerAngles = new Vector3(sr.transform.eulerAngles.x, sr.transform.eulerAngles.y, currentAngle);
         }
@@ -93,7 +87,7 @@ public class Weapon : MonoBehaviour
             anim.SetBool("right", false);
     }
 
-    private void WeaponAttack() 
+    private void WeaponAttack()
     {
         if (bag.weapon)
         {
@@ -106,8 +100,13 @@ public class Weapon : MonoBehaviour
                     if (attackTimer < 0)
                     {
                         attackTimer = 1 / gun.firingRatePerSec;
-                        GameObject bullet = Instantiate(gun.bullet, PlayerManager.instance.playerTransform.position + new Vector3(bulletVector.x * .25f, bulletVector.y * .25f, -.25f), Quaternion.identity, ItemManager.instance.itemTransform);//z÷·∏ﬂ∂»…˙≥…∫Ûø…ƒ‹–Ë“™µ˜’˚≈ˆ◊≤ÃÂµƒ≈–∂œ∏ﬂ∂»
+                        GameObject bullet = Instantiate(gun.bullet, PlayerManager.instance.playerTransform.position + new Vector3(gunVector.x * .25f, gunVector.y * .25f, -.25f), Quaternion.identity, ItemManager.instance.itemTransform);
                         bullet.GetComponentInChildren<SpriteRenderer>().transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(gunVector.y, gunVector.x) * Mathf.Rad2Deg);
+                        inventory.reduceDurability();
+                        string durabilityMessage = inventory.durabilityDict.ContainsKey(inventory.slotIndex) 
+                            ? inventory.durabilityDict[inventory.slotIndex].ToString() 
+                            : "Â∑≤ÁßªÈô§";
+                        Debug.Log($"ÂΩìÂâçÊßΩ‰Ωç {inventory.slotIndex} ËÄê‰πÖÂ∫¶: {durabilityMessage}");
                     }
                 }
             }

@@ -5,6 +5,7 @@ public class Player : Entity<PlayerStats>
 {
     #region Components
     public AnimatorController[] acList;
+    public CircleCollider2D coll;
     #endregion
 
     #region States
@@ -12,6 +13,7 @@ public class Player : Entity<PlayerStats>
     public PlayerIdleState idleState { get; private set; }
     public PlayerRollState rollState { get; private set; }
     public PlayerMoveState moveState { get; private set; }
+    public PlayerDieState dieState { get; private set; }
     public PlayerRunState runState { get; private set; }
     public PlayerRideState rideState { get; private set; }
     public PlayerSlashState slashState { get; private set; }
@@ -24,6 +26,7 @@ public class Player : Entity<PlayerStats>
         idleState = new PlayerIdleState(this, stateMachine, "Idle");
         rollState = new PlayerRollState(this, stateMachine, "Roll");
         moveState = new PlayerMoveState(this, stateMachine, "Move");
+        dieState = new PlayerDieState(this, stateMachine, "Die");
         runState = new PlayerRunState(this, stateMachine, "Run");
         rideState = new PlayerRideState(this, stateMachine, "Ride");
         slashState = new PlayerSlashState(this, stateMachine, "Attack");

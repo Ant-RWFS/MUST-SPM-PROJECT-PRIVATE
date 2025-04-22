@@ -8,7 +8,7 @@ public class Bag : MonoBehaviour
     public Transform weaponTransform;
     private void Awake()
     {
-        
+
     }
     private void Start()
     {
@@ -24,7 +24,7 @@ public class Bag : MonoBehaviour
     {
         weapon = inventory.armedWeapon;
 
-        if (weapon && !player.anim.GetBool("Ride"))
+        if (weapon && !player.anim.GetBool("Ride") && !player.anim.GetBool("Die"))
         {
             player.stats.isArmed = true;
             weaponTransform.gameObject.SetActive(true);

@@ -1,11 +1,11 @@
+using UnityEditor.Animations;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Wood", menuName = "Inventory/Item/Wood")]
+[CreateAssetMenu(fileName = "Wood", menuName = "Inventory/Resource/Wood")]
 public class Wood : Item
 {
     public override void Use()
     {
-        Debug.Log($"检查 {itemName}，这是一块普通的木头，暂无特殊效果");
-        // 可以添加未来用途，例如合成
+        Debug.Log("this is a wood");
     }
 }

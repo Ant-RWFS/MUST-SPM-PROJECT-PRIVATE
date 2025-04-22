@@ -9,11 +9,13 @@ public class PlayerDieState : PlayerState
     public override void Enter()
     {
         base.Enter();
+        player.LockRB();
     }
 
     public override void Exit()
     {
         base.Exit();
+        player.UnlockRB();
         player.stats.InitCurrentHealthValue();
     }
 

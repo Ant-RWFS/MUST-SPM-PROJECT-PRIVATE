@@ -37,14 +37,15 @@ public class PlayerState
 
         RollingLogic();
         SlashLogic();
+        DeathLogic();
     }
 
     private void InputUpdate()
-    { 
+    {
         xInput = Input.GetAxisRaw("Horizontal");
         yInput = Input.GetAxisRaw("Vertical");
 
-        input = new Vector2 (xInput, yInput).normalized;
+        input = new Vector2(xInput, yInput).normalized;
 
         if (!player.stats.isArmed)
             PlayerDisarmedAnim();
@@ -54,7 +55,7 @@ public class PlayerState
         player.AdjustCurrentVector(input.x, input.y);
     }
 
-    private void PlayerDisarmedAnim() 
+    private void PlayerDisarmedAnim()
     {
         if (player.anim.runtimeAnimatorController == player.acList[0])
             player.anim.SetFloat("Speed", 1);
@@ -66,7 +67,7 @@ public class PlayerState
         }
     }
 
-    private void PlayerArmedAnim() 
+    private void PlayerArmedAnim()
     {
         player.anim.runtimeAnimatorController = player.acList[0];
 
@@ -84,14 +85,28 @@ public class PlayerState
         player.anim.SetBool(animBoolName, false);
     }
 
+    public virtual void DeathLogic()
+    {
+        if (player.stats.currentHealth.GetValue() <= 0)
+        {
+            if (player.anim.GetBool("Ride"))
+            {
+                MotorManager.instance.motor.stateMachine.ChangeState(MotorManager.instance.motor.offState);
+                player.stateMachine.ChangeState(player.idleState);
+            }
+
+            player.stateMachine.ChangeState(player.dieState);
+        }
+    }
+
     public virtual void AnimationFinishTrigger()
     {
         triggerCalled = true;
     }
 
-    public virtual void RollingLogic() 
+    public virtual void RollingLogic()
     {
-        if (!player.stats.isBusy && Input.GetKeyDown(KeyCode.Space)) 
+        if (!player.stats.isBusy && Input.GetKeyDown(KeyCode.Space))
             player.stateMachine.ChangeState(player.rollState);
     }
 

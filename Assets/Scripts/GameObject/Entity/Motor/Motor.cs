@@ -31,6 +31,18 @@ public class Motor : Entity<MotorStats>
     protected override void Update()
     {
         base.Update();
+        HandleVisualRange();
         stateMachine.currentState.Update();
     }
+
+    private void HandleVisualRange()
+    {
+        if (Mathf.Abs(Vector3.Distance(transform.position, PlayerManager.instance.playerTransform.position)) >= MapGenerator.instance.radius - 2.5f)
+            MotorOutRange();
+        else
+            MotorInRange();
+    }
+
+    private void MotorOutRange() => sr.enabled = false;
+    private void MotorInRange() => sr.enabled = true;
 }

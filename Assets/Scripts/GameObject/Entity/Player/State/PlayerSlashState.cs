@@ -1,11 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerSlashState : PlayerState
 {
     public PlayerSlashState(Player _player, PlayerStateMachine _playerStateMachine, string _animBoolName) : base(_player, _playerStateMachine, _animBoolName)
     {
+
     }
 
     public override void Enter()
@@ -30,5 +30,13 @@ public class PlayerSlashState : PlayerState
 
         if (!player.anim.GetBool("Attack"))
             player.stateMachine.ChangeState(player.idleState);
+
+        AdjustAttackBox();
     }
+
+    private void AdjustAttackBox()
+    {
+        Vector2 attackVector = player.stats.currentVector.normalized;
+        player.coll.transform.position = new Vector3(player.transform.position.x + attackVector.x / 2, player.transform.position.y + attackVector.y / 2);
+    }  
 }

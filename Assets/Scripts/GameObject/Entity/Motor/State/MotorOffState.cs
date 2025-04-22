@@ -9,13 +9,13 @@ public class MotorOffState : MotorState
     public override void Enter()
     {
         base.Enter();
-        MotorLockRB();
+        motor.LockRB();
     }
 
     public override void Exit()
     {
         base.Exit();
-        MotorUnlockRB();
+        motor.UnlockRB();
     }
 
     public override void Update()
